@@ -19,10 +19,12 @@ nltk==3.5
 numpy==1.19.0
 opencv-contrib-python==4.3.0.36
 opencv-contrib-python-headless==4.3.0.36
+pandas==1.1.0
 Pillow==7.1.2
 pyparsing==2.4.7
 python-dateutil==2.8.1
 pytils==0.3
+pytz==2020.1
 PyWavelets==1.1.1
 PyYAML==5.3.1
 regex==2020.6.8

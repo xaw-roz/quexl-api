@@ -5,9 +5,12 @@ from pip._vendor import requests
 from skimage import io
 import numpy as np
 import mimetypes
-
+import sys
+from io import StringIO
 import scipy.misc
 import time
+import pandas as pd
+
 from nltk.corpus import twitter_samples
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import twitter_samples, stopwords
@@ -549,8 +552,54 @@ def sentimentAnalysis():
         )
 
 
+@app.route('/tableDataManipulation' , methods = ['GET', 'POST'])
+def tableDataManipulation ():
+    # try:
+    dict = request.form
+    for key in dict:
+        print('form key '+key + dict[key])
+    data1=request.form['data1']
+    # data2=request.form['data2']
+    action1=request.form['action1']
+    inpData1 = StringIO(""+str(data1)
+        +"")
+
+    # inpData2 = StringIO("" + str(data2)
+    #                     + "")
+    pd.set_option("display.max_rows", None, "display.max_columns", None)
+    print (action1)
+    table1 = pd.read_csv(inpData1, sep="\t")
+    # df2 = pd.read_csv(inpData2, sep="\t")
+    # df1.drop(df1.columns[[5,6,7,8,9]],axis=1,inplace=True)
+
+    # df1['Series_reference'] = df1['Series_reference'].map(lambda name: name.lower()) #lower case
+    # df1['Data_value'] = df1['Data_value'] *2 #perform opertation
+    # df1['Series_reference']=df1['Series_reference'].str.startswith("H")
+    eachCommand = action1.split("||")
+    try:
+        for command in eachCommand:
+            print (command.strip())
+            exec(command.strip())
+    except:
+        print("Error occured")
+
+    # df1 = df1[['name', 'age', 'state']]//reorder
+    # df1.drop(columns=['age', 'name'])
+    # df1=df1.drop(columns=['Suppressed','Series_title_4','STATUS','UNITS','Magnitude','Subject','Group','Series_title_1'],axis=1,inplace=True)
+    print (table1)
+    result=table1.to_csv(sep='\t')
+    # print (df2)
+    return  result
+    # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
+    # except Exception as e:
+    #     print(e)
+    #     return jsonify(
+    #         message='success',
+    #         data='The input was invalid',
+    #     )
 
 
-
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
 
