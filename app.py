@@ -10,7 +10,8 @@ from io import StringIO
 import scipy.misc
 import time
 import pandas as pd
-
+from plotnine import *
+from plotnine.data import *
 from nltk.corpus import twitter_samples
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import twitter_samples, stopwords
@@ -55,8 +56,8 @@ m.load_weights(weight_file)
 class_names = load_class_names(namesfile)
 
 
-baseUrl='http://vmi425296.contaboserver.net:5000/'
-# baseUrl='http://localhost:5000'
+# baseUrl='http://vmi425296.contaboserver.net:5000/'
+baseUrl='http://localhost:5000'
 def remove_noise(tweet_tokens, stop_words = ()):
 
     cleaned_tokens = []
@@ -554,6 +555,53 @@ def sentimentAnalysis():
 
 @app.route('/tableDataManipulation' , methods = ['GET', 'POST'])
 def tableDataManipulation ():
+    try:
+        dict = request.form
+        for key in dict:
+            print('form key '+key + dict[key])
+        data1=request.form['data1']
+        # data2=request.form['data2']
+        action1=request.form['action1']
+        inpData1 = StringIO(""+str(data1)
+            +"")
+
+        # inpData2 = StringIO("" + str(data2)
+        #                     + "")
+        pd.set_option("display.max_rows", None, "display.max_columns", None)
+        print (action1)
+        table1 = pd.read_csv(inpData1, sep="\t")
+        # df2 = pd.read_csv(inpData2, sep="\t")
+        # df1.drop(df1.columns[[5,6,7,8,9]],axis=1,inplace=True)
+
+        # df1['Series_reference'] = df1['Series_reference'].map(lambda name: name.lower()) #lower case
+        # df1['Data_value'] = df1['Data_value'] *2 #perform opertation
+        # df1['Series_reference']=df1['Series_reference'].str.startswith("H")
+        eachCommand = action1.split("||")
+        try:
+            for command in eachCommand:
+                print (command.strip())
+                exec(command.strip())
+        except:
+            print("Error occured")
+
+        # df1 = df1[['name', 'age', 'state']]//reorder
+        # df1.drop(columns=['age', 'name'])
+        # df1=df1.drop(columns=['Suppressed','Series_title_4','STATUS','UNITS','Magnitude','Subject','Group','Series_title_1'],axis=1,inplace=True)
+        print (table1)
+        result=table1.to_csv(sep='\t')
+        # print (df2)
+        return  result
+        # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='The input was invalid',
+        )
+
+
+@app.route('/graphPlot' , methods = ['GET', 'POST'])
+def graphPlot ():
     # try:
     dict = request.form
     for key in dict:
@@ -566,12 +614,13 @@ def tableDataManipulation ():
 
     # inpData2 = StringIO("" + str(data2)
     #                     + "")
-    pd.set_option("display.max_rows", None, "display.max_columns", None)
-    print (action1)
+    graph=geom_blank(mapping=None, data=None, stat='identity', position='identity',
+       na_rm=False, inherit_aes=True, show_legend=None)
     table1 = pd.read_csv(inpData1, sep="\t")
+
     # df2 = pd.read_csv(inpData2, sep="\t")
     # df1.drop(df1.columns[[5,6,7,8,9]],axis=1,inplace=True)
-
+    timeStr = str(int(round(time.time() * 1000)))
     # df1['Series_reference'] = df1['Series_reference'].map(lambda name: name.lower()) #lower case
     # df1['Data_value'] = df1['Data_value'] *2 #perform opertation
     # df1['Series_reference']=df1['Series_reference'].str.startswith("H")
@@ -579,17 +628,27 @@ def tableDataManipulation ():
     try:
         for command in eachCommand:
             print (command.strip())
-            exec(command.strip())
+            exec(command.strip(),globals())
     except:
         print("Error occured")
-
+    # graph = (ggplot(table1, aes('Firstname','height(m)'))
+    #          + geom_col(fill='green')
+    #          + theme_light()
+    #          )
     # df1 = df1[['name', 'age', 'state']]//reorder
     # df1.drop(columns=['age', 'name'])
     # df1=df1.drop(columns=['Suppressed','Series_title_4','STATUS','UNITS','Magnitude','Subject','Group','Series_title_1'],axis=1,inplace=True)
-    print (table1)
-    result=table1.to_csv(sep='\t')
+    # try:
+    graph.save("static/"+timeStr+".png")
+    return jsonify(
+        message='success',
+        # data=baseUrl+url_for('static', filename=f_name),
+        data=baseUrl + url_for('static', filename=timeStr+'.png'),
+    )
+    # except:
+    #     return 'Error occured'
     # print (df2)
-    return  result
+
     # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
     # except Exception as e:
     #     print(e)
