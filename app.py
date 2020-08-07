@@ -156,10 +156,9 @@ def grascaleImage():
         f_name=timeStr+'gray'+extension
         grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
         cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, grayImage)
-        return jsonify(
-            message='success',
-            data=baseUrl+url_for('static',filename=f_name),
-        )
+
+        return baseUrl+url_for('static',filename=f_name)
+
     except:
         return jsonify(
             message='success',
@@ -192,10 +191,9 @@ def edgeDetection():
         edges = cv2.Canny(originalImage, 100, 200)
 
         cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, edges)
-        return jsonify(
-            message='success',
-            data=baseUrl+url_for('static', filename=f_name),
-        )
+
+        return baseUrl+url_for('static', filename=f_name)
+
     except:
         return jsonify(
             message='success',
@@ -225,10 +223,9 @@ def filterImage():
         dst = cv2.fastNlMeansDenoisingColored(originalImage, None, 10, 10, 7, 21)
 
         cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, dst)
-        return jsonify(
-            message='success',
-            data=baseUrl+url_for('static', filename=f_name),
-        )
+
+        return baseUrl+url_for('static', filename=f_name)
+
     except:
         return jsonify(
             message='success',
@@ -612,11 +609,13 @@ def graphPlot ():
     inpData1 = StringIO(""+str(data1)
         +"")
 
+    global graph
     # inpData2 = StringIO("" + str(data2)
     #                     + "")
-    graph=geom_blank(mapping=None, data=None, stat='identity', position='identity',
-       na_rm=False, inherit_aes=True, show_legend=None)
-    table1 = pd.read_csv(inpData1, sep="\t")
+    # graph=geom_blank(mapping=None, data=None, stat='identity', position='identity',
+    #    na_rm=False, inherit_aes=True, show_legend=None)
+    global table1
+    table1= pd.read_csv(inpData1, sep="\t")
 
     # df2 = pd.read_csv(inpData2, sep="\t")
     # df1.drop(df1.columns[[5,6,7,8,9]],axis=1,inplace=True)
@@ -629,7 +628,8 @@ def graphPlot ():
         for command in eachCommand:
             print (command.strip())
             exec(command.strip(),globals())
-    except:
+    except Exception as e:
+        print (e)
         print("Error occured")
     # graph = (ggplot(table1, aes('Firstname','height(m)'))
     #          + geom_col(fill='green')
@@ -640,11 +640,8 @@ def graphPlot ():
     # df1=df1.drop(columns=['Suppressed','Series_title_4','STATUS','UNITS','Magnitude','Subject','Group','Series_title_1'],axis=1,inplace=True)
     # try:
     graph.save("static/"+timeStr+".png")
-    return jsonify(
-        message='success',
-        # data=baseUrl+url_for('static', filename=f_name),
-        data=baseUrl + url_for('static', filename=timeStr+'.png'),
-    )
+    return baseUrl + url_for('static', filename=timeStr+'.png')
+
     # except:
     #     return 'Error occured'
     # print (df2)
