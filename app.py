@@ -56,8 +56,8 @@ m.load_weights(weight_file)
 class_names = load_class_names(namesfile)
 
 
-# baseUrl='http://vmi425296.contaboserver.net:5000/'
-baseUrl='http://localhost:5000'
+baseUrl='http://vmi425296.contaboserver.net:5000/'
+# baseUrl='http://localhost:5000'
 def remove_noise(tweet_tokens, stop_words = ()):
 
     cleaned_tokens = []
@@ -558,7 +558,7 @@ def graphPlot ():
     #     )
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
 
