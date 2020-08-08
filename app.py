@@ -150,8 +150,8 @@ def grascaleImage():
         response = requests.get(url)
         content_type = response.headers['content-type']
         extension = mimetypes.guess_extension(content_type)
-        if (extension == 'jpe'):
-            extension = 'jpg'
+        if (extension == '.jpe'):
+            extension = '.jpg'
         f_ext = os.path.splitext(url)[-1]
         f_name = 'img{}'.format(f_ext)
         timeStr=str(int(round(time.time() * 1000)))
@@ -180,8 +180,8 @@ def edgeDetection():
         response = requests.get(url)
         content_type = response.headers['content-type']
         extension = mimetypes.guess_extension(content_type)
-        if (extension == 'jpe'):
-            extension = 'jpg'
+        if (extension == '.jpe'):
+            extension = '.jpg'
         f_ext = os.path.splitext(url)[-1]
         f_name = 'img{}'.format(f_ext)
         timeStr=str(int(round(time.time() * 1000)))
@@ -218,8 +218,8 @@ def filterImage():
         response = requests.get(url)
         content_type = response.headers['content-type']
         extension = mimetypes.guess_extension(content_type)
-        if (extension == 'jpe'):
-            extension = 'jpg'
+        if (extension == '.jpe'):
+            extension = '.jpg'
         f_ext = os.path.splitext(url)[-1]
         print(f_ext)
         f_name = 'img{}'.format(f_ext)
@@ -259,8 +259,8 @@ def objectDetection():
                 response = requests.get(url)
                 content_type = response.headers['content-type']
                 extension = mimetypes.guess_extension(content_type)
-                if(extension=='jpe'):
-                    extension='jpg'
+                if(extension=='.jpe'):
+                    extension='.jpg'
                 fistName = 'img{}'.format(f_ext)
                 fistName = timeStr + 'first' + fistName.split("?")[0]
                 outputName = timeStr + 'out' + extension
