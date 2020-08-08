@@ -264,6 +264,6 @@ def plot_boxes(img, boxes, class_names,outputName, plot_labels,  color = None):
 
     print (foundlabels)
     plt.savefig(outputName)
-    plt.show()
+    # plt.show()
     return foundlabels
 
