@@ -263,6 +263,7 @@ def plot_boxes(img, boxes, class_names,outputName, plot_labels,  color = None):
                    bbox = dict(facecolor = rgb, edgecolor = rgb, alpha = 0.6))        
 
     print (foundlabels)
+    print (outputName)
     plt.savefig(outputName)
     # plt.show()
     return foundlabels
