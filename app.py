@@ -501,27 +501,32 @@ def tableDataManipulation ():
 
 @app.route('/deleteLine' , methods = ['GET', 'POST'])
 def deleteLine ():
-    text =request.form['text']
-    line=request.form['line']
+    try:
+        text =request.form['text']
+        line=request.form['line']
 
-    front = text.split('\n')
+        front = text.split('\n')
 
-    print(front)# Split just before the doomed line.
-    textRet=''
-    i=int(line)
-    for idx, val in enumerate(front):
-        if(idx+1!=i):
-            textRet=textRet+val+'\n'
+        print(front)# Split just before the doomed line.
+        textRet=''
+        i=int(line)
+        for idx, val in enumerate(front):
+            if(idx+1!=i):
+                textRet=textRet+val+'\n'
 
-    return textRet
-
+        return textRet
+    except Exception as e:
+        return "Error occured please check your input"
 @app.route('/replaceText' , methods = ['GET', 'POST'])
 def replaceText ():
-    text =request.form['text']
-    word=request.form['word']
-    replace=request.form['replaceWord']
-    text=text.replace(word,replace)
-    return text
+    try:
+        text =request.form['text']
+        word=request.form['word']
+        replace=request.form['replaceWord']
+        text=text.replace(word,replace)
+        return text
+    except Exception as e:
+        return "Error occured please check your input"
 
 @app.route('/graphPlot' , methods = ['GET', 'POST'])
 def graphPlot ():
