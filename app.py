@@ -499,6 +499,29 @@ def tableDataManipulation ():
             data='The input was invalid',
         )
 
+@app.route('/deleteLine' , methods = ['GET', 'POST'])
+def deleteLine ():
+    text =request.form['text']
+    line=request.form['line']
+
+    front = text.split('\n')
+
+    print(front)# Split just before the doomed line.
+    textRet=''
+    i=int(line)
+    for idx, val in enumerate(front):
+        if(idx+1!=i):
+            textRet=textRet+val+'\n'
+
+    return textRet
+
+@app.route('/replaceText' , methods = ['GET', 'POST'])
+def replaceText ():
+    text =request.form['text']
+    word=request.form['word']
+    replace=request.form['replaceWord']
+    text=text.replace(word,replace)
+    return text
 
 @app.route('/graphPlot' , methods = ['GET', 'POST'])
 def graphPlot ():
