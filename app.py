@@ -11,6 +11,8 @@ import scipy.misc
 import time
 import pandas as pd
 from plotnine import *
+from flask_cors import CORS
+
 from plotnine.data import *
 from nltk.corpus import twitter_samples
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -24,7 +26,7 @@ from utils import *
 from darknet import Darknet
 
 app = Flask(__name__)
-
+CORS(app)
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('twitter_samples')
@@ -513,20 +515,24 @@ def deleteLine ():
         for idx, val in enumerate(front):
             if(idx+1!=i):
                 textRet=textRet+val+'\n'
-
-        return textRet
+        response=textRet
+        return response
     except Exception as e:
-        return "Error occured please check your input"
+        response="Error occured please check your input"
+        return response
 @app.route('/replaceText' , methods = ['GET', 'POST'])
 def replaceText ():
     try:
+
         text =request.form['text']
         word=request.form['word']
         replace=request.form['replaceWord']
         text=text.replace(word,replace)
-        return text
+        response=text
+        return response
     except Exception as e:
-        return "Error occured please check your input"
+        response="Error occured please check your input"
+        return response
 
 @app.route('/graphPlot' , methods = ['GET', 'POST'])
 def graphPlot ():
