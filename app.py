@@ -6,6 +6,8 @@ from skimage import io
 import numpy as np
 import mimetypes
 import sys
+import os
+from subprocess import call
 from io import StringIO
 import scipy.misc
 import time
@@ -520,6 +522,92 @@ def deleteLine ():
     except Exception as e:
         response="Error occured please check your input"
         return response
+
+@app.route('/fileConversion' , methods = [ 'POST'])
+def fileConversion ():
+    try:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                return 'there is no file in form!'
+            file1 = request.files['file']
+            target = request.form['target']
+            timeStr = str(int(round(time.time() * 1000)))
+            fileName=timeStr+ file1.filename
+            path = UPLOAD_FOLDER+"/"+fileName
+            file1.save(path)
+            outputFile = timeStr + "out."+target
+            outPath = UPLOAD_FOLDER+"/"+outputFile
+
+            call('pandoc -s '+path+' -o '+outPath, shell=True)
+            return baseUrl + url_for('static', filename=outputFile)
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
+
+@app.route('/fileConversionAsci' , methods = [ 'POST'])
+def fileConversionAsci ():
+    try:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                return 'there is no file in form!'
+            file1 = request.files['file']
+            timeStr = str(int(round(time.time() * 1000)))
+            fileName=timeStr+ file1.filename
+            path = UPLOAD_FOLDER+"/"+fileName
+            file1.save(path)
+            outputFile = timeStr + "out.txt"
+            outPath = UPLOAD_FOLDER+"/"+outputFile
+
+            call('pandoc -s '+path+'-t asciidoc -o '+outPath, shell=True)
+            return baseUrl + url_for('static', filename=outputFile)
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
+@app.route('/fileConversionFile' , methods = [ 'POST'])
+def fileConversionFile ():
+    try:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                return 'there is no file in form!'
+            file1 = request.files['file ']
+            target = request.form['target']
+            timeStr = str(int(round(time.time() * 1000)))
+            fileName=timeStr+ file1.filename
+            path = UPLOAD_FOLDER+"/"+fileName
+            file1.save(path)
+            outputFile = timeStr + "out."+target
+            outPath = UPLOAD_FOLDER+"/"+outputFile
+            print (outPath)
+            call('pandoc -s '+path+' -o '+outPath, shell=True)
+            return app.send_static_file(outputFile)
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
+
+@app.route('/fileConversionAsciFile' , methods = [ 'POST'])
+def fileConversionAsciFile ():
+    try:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                return 'there is no file in form!'
+            file1 = request.files['file']
+            timeStr = str(int(round(time.time() * 1000)))
+            fileName=timeStr+ file1.filename
+            path = UPLOAD_FOLDER+"/"+fileName
+            file1.save(path)
+            outputFile = timeStr + "out.txt"
+            outPath = UPLOAD_FOLDER+"/"+outputFile
+
+            call('pandoc -s '+path+'-t asciidoc -o '+outPath, shell=True)
+            return app.send_static_file(outputFile)
+
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
 @app.route('/replaceText' , methods = ['GET', 'POST'])
 def replaceText ():
     try:
