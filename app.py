@@ -571,7 +571,7 @@ def fileConversionFile():
         if request.method == 'POST':
             if 'file' not in request.files:
                 return 'there is no file in form!'
-            file1 = request.files['file ']
+            file1 = request.files['file']
             target = request.form['target']
             timeStr = str(int(round(time.time() * 1000)))
             fileName=timeStr+ file1.filename
