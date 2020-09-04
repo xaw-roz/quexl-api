@@ -524,7 +524,7 @@ def deleteLine ():
         return response
 
 @app.route('/fileConversion' , methods = [ 'POST'])
-def fileConversion ():
+def fileConversion():
     try:
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -541,12 +541,12 @@ def fileConversion ():
             call('pandoc -s '+path+' -o '+outPath, shell=True)
             return baseUrl + url_for('static', filename=outputFile)
     except Exception as e:
-        response="Error occured please check your input"
-        return response
+        response="Error occured please check your input\n"
+        return response+str(e)
 
 
 @app.route('/fileConversionAsci' , methods = [ 'POST'])
-def fileConversionAsci ():
+def fileConversionAsci():
     try:
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -559,14 +559,14 @@ def fileConversionAsci ():
             outputFile = timeStr + "out.txt"
             outPath = UPLOAD_FOLDER+"/"+outputFile
 
-            call('pandoc -s '+path+'-t asciidoc -o '+outPath, shell=True)
+            call('pandoc -s '+path+' -t asciidoc -o '+outPath, shell=True)
             return baseUrl + url_for('static', filename=outputFile)
     except Exception as e:
-        response="Error occured please check your input"
-        return response
+        response="Error occured please check your input\n"
+        return response+str(e)
 
 @app.route('/fileConversionFile' , methods = [ 'POST'])
-def fileConversionFile ():
+def fileConversionFile():
     try:
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -580,15 +580,16 @@ def fileConversionFile ():
             outputFile = timeStr + "out."+target
             outPath = UPLOAD_FOLDER+"/"+outputFile
             print (outPath)
+            time.sleep(2)
             call('pandoc -s '+path+' -o '+outPath, shell=True)
             return app.send_static_file(outputFile)
     except Exception as e:
         response="Error occured please check your input"
-        return response
+        return response+str(e)
 
 
 @app.route('/fileConversionAsciFile' , methods = [ 'POST'])
-def fileConversionAsciFile ():
+def fileConversionAsciFile():
     try:
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -600,12 +601,13 @@ def fileConversionAsciFile ():
             file1.save(path)
             outputFile = timeStr + "out.txt"
             outPath = UPLOAD_FOLDER+"/"+outputFile
-
-            call('pandoc -s '+path+'-t asciidoc -o '+outPath, shell=True)
+            time.sleep(2)
+            call('pandoc -s '+path+' -t asciidoc -o '+outPath, shell=True)
             return app.send_static_file(outputFile)
 
     except Exception as e:
         response="Error occured please check your input"
+        response=response+str(e)
         return response
 
 @app.route('/replaceText' , methods = ['GET', 'POST'])
