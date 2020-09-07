@@ -3,8 +3,11 @@ from flask import Flask, jsonify, url_for,request
 import cv2
 from pip._vendor import requests
 from skimage import io
+from PIL import Image
 import numpy as np
 import mimetypes
+from urllib.request import urlopen
+from os.path import basename
 import sys
 import os
 from subprocess import call
@@ -14,7 +17,7 @@ import time
 import pandas as pd
 from plotnine import *
 from flask_cors import CORS
-
+import json
 from plotnine.data import *
 from nltk.corpus import twitter_samples
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -26,7 +29,7 @@ import re, string, random
 import os
 from utils import *
 from darknet import Darknet
-
+from scholarly import scholarly
 app = Flask(__name__)
 CORS(app)
 nltk.download('punkt')
@@ -240,7 +243,43 @@ def filterImage():
         return jsonify(
             message='success',
             data='Put an image link with extension',
-        )@app.route('/filterImage' , methods = ['GET', 'POST'])
+        )
+
+
+@app.route('/convertImageUsingUrl', methods=['GET', 'POST'])
+def convertImageUsingUrl():
+    try:
+
+        url = request.form['imgdata']
+        ext = request.form['ext']
+        print(url)
+        timeStr = str(int(round(time.time() * 1000)))
+
+        response = requests.get(url)
+        content_type = response.headers['content-type']
+        extension = mimetypes.guess_extension(content_type)
+        if (extension == '.jpe'):
+            extension = '.jpg'
+        f_ext = os.path.splitext(url)[-1]
+        f_name = 'img{}'.format(f_ext)
+        f_name = timeStr + 'oo.' + ext
+        o_name = timeStr + 'oo' + extension
+        print("assd")
+        img_data = response.content
+        with open(UPLOAD_FOLDER + '/' + o_name, 'wb') as handler:
+            handler.write(img_data)
+        # cv2.imwrite(UPLOAD_FOLDER + '/' + o_name, originalImage)
+        im = Image.open(UPLOAD_FOLDER + '/' + o_name)
+        im.save(UPLOAD_FOLDER + '/' + f_name)
+        print ("assd")
+        return baseUrl + url_for('static', filename=f_name)
+
+    except Exception as e:
+        print (e)
+        return jsonify(
+            message='success',
+            data='Put an image link with extension',
+        )
 
 @app.route('/objectDetection' , methods = ['GET', 'POST'])
 def objectDetection():
@@ -565,6 +604,30 @@ def fileConversionAsci():
         response="Error occured please check your input\n"
         return response+str(e)
 
+@app.route('/convertImage', methods=['GET', 'POST'])
+def convertImage():
+    try:
+
+        file1 = request.files['file']
+        ext = request.form['ext']
+        timeStr = str(int(round(time.time() * 1000)))
+        fileName = timeStr + file1.filename
+        path = UPLOAD_FOLDER + "/" + fileName
+        file1.save(path)
+        f_name = timeStr + 'oo.' + ext
+
+        im = Image.open(path)
+        im.save(UPLOAD_FOLDER + '/' + f_name)
+        return app.send_static_file(f_name)
+
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='Put an image link with extension',
+        )
+
+
 @app.route('/fileConversionFile' , methods = [ 'POST'])
 def fileConversionFile():
     try:
@@ -620,6 +683,87 @@ def replaceText ():
         text=text.replace(word,replace)
         response=text
         return response
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
+@app.route('/scholarlyBookAuthor' , methods = ['GET', 'POST'])
+def scholarlyBookAuthor ():
+    # try:
+    query = request.form['query']
+    search_query = scholarly.search_author(query)
+    string = '['
+    author = next(search_query).fill()
+    for pub in author.publications:
+        search_book = scholarly.search_pubs(pub.bib['title'])
+        book=next(search_book)
+        print (book)
+        url=''
+        try:
+            url=book.blb['eprint']
+        except:
+            url=''
+
+        print (url)
+        # print (basename(url))
+    # for i in range(5):
+    #     try:
+    #         author = next(search_query)
+    #         string += str(author) + ","
+    #     except:
+    #         print('')
+    #
+    # if (len(string) > 0):
+    #     string = string[:-1]
+    #     string=string+"]"
+
+    return (str(string))
+    # except Exception as e:
+    #     response="Error occured please check your input"
+    #     return response
+
+
+@app.route('/scholarlyBookKeyword', methods = ['GET', 'POST'])
+def scholarlyBookKeyword ():
+    try:
+        query = request.form['query']
+        search_query = scholarly.search_keyword(query)
+        string=''
+        for i in range(5):
+            try:
+                author = next(search_query)
+                string+=str(author)+","
+            except:
+                print('')
+
+
+        if(len(string)>0):
+            string =string[:-1]
+
+        return json.loads(str(string))
+    except Exception as e:
+        response="Error occured please check your input"
+        return response
+
+@app.route('/scholarlyBookPubs', methods = ['GET', 'POST'])
+def scholarlyBookPubs ():
+    try:
+        query = request.form['query']
+        search_query = scholarly.search_pubs(query)
+
+        string=''
+        for i in range(5):
+            try:
+                author = next(search_query)
+                string+=str(author)+","
+            except:
+                print('')
+
+
+        if(len(string)>0):
+            string =string[:-1]
+
+        return (str(string))
     except Exception as e:
         response="Error occured please check your input"
         return response
