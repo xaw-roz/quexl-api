@@ -1,11 +1,13 @@
 import nltk
 from flask import Flask, jsonify, url_for,request
 import cv2
+import pytesseract
 from pip._vendor import requests
 from skimage import io
 from PIL import Image
 import numpy as np
 import mimetypes
+import colorsys
 from urllib.request import urlopen
 from os.path import basename
 import sys
@@ -26,17 +28,21 @@ from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
 from nltk import FreqDist, classify, NaiveBayesClassifier
 import re, string, random
+import requests
+from requests.exceptions import RequestException
+from werkzeug.utils import secure_filename
+
 import os
 from utils import *
 from darknet import Darknet
 from scholarly import scholarly
 app = Flask(__name__)
 CORS(app)
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('twitter_samples')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('twitter_samples')
+# nltk.download('stopwords')
+# nltk.download('wordnet')
 
 
 CONFIDENCE = 0.5
@@ -63,8 +69,8 @@ m.load_weights(weight_file)
 class_names = load_class_names(namesfile)
 
 
-baseUrl='http://vmi425296.contaboserver.net:5000/'
-# baseUrl='http://localhost:5000'
+# baseUrl='http://vmi425296.contaboserver.net:5000/'
+baseUrl='http://localhost:5000'
 def remove_noise(tweet_tokens, stop_words = ()):
 
     cleaned_tokens = []
@@ -152,6 +158,7 @@ def grascaleImage():
         
         url='https://techcrunch.com/wp-content/uploads/2015/10/screen-shot-2015-10-08-at-4-20-16-pm.png?w=730&crop=1'
         url=request.form['data']
+        f = request.files['imgFile']
         originalImage = io.imread(url)
         page = requests.get(url)
         response = requests.get(url)
@@ -173,6 +180,205 @@ def grascaleImage():
             message='success',
             data='Put an image link with extension',
         )
+
+def rgb_to_hsv(r, g, b):
+    r, g, b = r/255.0, g/255.0, b/255.0
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    df = mx-mn
+    if mx == mn:
+        h = 0
+    elif mx == r:
+        h = (60 * ((g-b)/df) + 360) % 360
+    elif mx == g:
+        h = (60 * ((b-r)/df) + 120) % 360
+    elif mx == b:
+        h = (60 * ((r-g)/df) + 240) % 360
+    if mx == 0:
+        s = 0
+    else:
+        s = (df/mx)*100
+    v = mx*100
+    return int(h), int(s), int(v)
+def rgb_hsv_converter(rgb):
+    (r,g,b) = rgb_normalizer(rgb)
+    hsv = colorsys.rgb_to_hsv(r,g,b)
+    (h,s,v) = hsv_normalizer(hsv)
+    upper_band = [h+10, s+40, v+40]
+    lower_band = [h-10, s-40, v-40]
+    return {
+        'upper_band': upper_band,
+        'lower_band': lower_band
+    }
+
+def rgb_normalizer(rgb):
+    (r,g,b) = rgb
+    return (r/255, g/255, b/255)
+
+def hsv_normalizer(hsv):
+    (h,s,v) = hsv
+    return (h*360, s*255, v*255)
+
+@app.route('/colorMasking', methods=['GET', 'POST'])
+def colorMasking():
+    try:
+
+        red1 = request.form['red1']
+        blue1 = request.form['blue1']
+        green1 = request.form['green1']
+        red2 = request.form['red2']
+        blue2 = request.form['blue2']
+        green2 = request.form['green2']
+        uploaded_file = request.files['imgFile']
+        timeStr = str(int(round(time.time() * 1000)))
+
+        if uploaded_file.filename != '':
+            filename = timeStr+secure_filename(filename = secure_filename(uploaded_file.filename))
+            uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+            img = cv2.imread('static/' + filename)
+            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            hsv_img = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2HSV)
+            # lowerRange = (red1, blue1, green1)
+            # upperRange = (red2, blue2, green2)
+            # plt.imshow(hsv_img)
+
+            lowHsv=(rgb_to_hsv(float(red1), float(green1), float(blue1)))
+            upHsv=(rgb_to_hsv(float(red2), float(green2), float(blue2)))
+            print (lowHsv)
+            print(upHsv)
+            lowerRangeHSV= (int(float(lowHsv[0])/2), int(255*(float(lowHsv[1])/100)), int(255*(float(lowHsv[2])/100)))
+            # upperRangeHSV=(float(red2)/2,float(green2), float(blue2))
+            upperRangeHSV= (int(float(upHsv[0])/2), int(255*(float(upHsv[1])/100)), int(255*(float(upHsv[2])/100)))
+
+            if(lowerRangeHSV>upperRangeHSV):
+                temp=lowerRangeHSV
+                lowerRangeHSV=upperRangeHSV
+                upperRangeHSV=temp
+
+            # print(lowerRangeHSV)
+            # print(upperRangeHSV)
+            # print ("new")
+            # # lowerRangeHSV=(1, 190, 200)
+            # # upperRangeHSV=(18, 255, 255)
+            # print(lowerRangeHSV)
+            # print(upperRangeHSV)
+
+            mask = cv2.inRange(hsv_img, lowerRangeHSV, upperRangeHSV)
+            plt.imshow(mask)
+            plt.show()
+            result = cv2.bitwise_and(rgb_img, rgb_img, mask=mask)
+            bgrResult=cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
+            filename = 'maksed'+filename
+            cv2.imwrite(UPLOAD_FOLDER + '/' + filename, bgrResult)
+            return app.send_static_file(filename)
+        else:
+            return jsonify(
+                message='failure',
+                data='No file found',
+                status=500,
+            )
+
+    except Exception as e:
+        return jsonify(
+            message='failure',
+            data='An error occoured',
+            error=str(e),
+            status=500,
+        )
+
+
+@app.route('/ocrAny', methods=['GET', 'POST'])
+def ocrAny():
+    try:
+
+        language = request.form['language']
+        uploaded_file = request.files['imgFile']
+        timeStr = str(int(round(time.time() * 1000)))
+        if uploaded_file.filename != '':
+            filename = timeStr+secure_filename(filename = secure_filename(uploaded_file.filename))
+            uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+            img = cv2.imread('static/' + filename)
+            gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            text=pytesseract.image_to_string(gray,lang=language)
+            return text
+        else:
+            return jsonify(
+                message='failure',
+                data='No file found',
+                status=500,
+            )
+
+    except Exception as e:
+        return jsonify(
+            message='failure',
+            data='An error occoured',
+            error=str(e),
+            status=500,
+        )
+
+@app.route('/operationOnCSV', methods=['GET', 'POST'])
+def operationOnCSV ():
+    # try:
+    operation = request.form['operation']
+    isMultiple = request.form['isMultiple']
+    uploaded_file = request.files['csvFile']
+    timeStr = str(int(round(time.time() * 1000)))
+
+    if uploaded_file.filename != '':
+        filename = timeStr + secure_filename(filename=secure_filename(uploaded_file.filename))
+        uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+        df=pd.read_csv('static/' + filename)
+        # print(df)
+        numbers=df.iloc[:, 0]
+        result=0
+        if(len(numbers)>0):
+            if (operation == 'min'):
+                result=numbers[0]
+            elif(operation=='mul'):
+                result=1
+        for number in numbers:
+            print(number)
+            if(operation=='add'):
+                result=result+number
+            elif(operation=='mul'):
+                result=result*number
+            elif(operation=='max'):
+                if(result<number):
+                    result=number
+            else:
+                if(number<result):
+                    result=number
+
+        if (isMultiple=='multiple'):
+            numbersSecond = df.iloc[:, 1]
+            for number in numbersSecond:
+                print(number)
+                if (operation == 'add'):
+                    result = result + number
+                elif (operation == 'mul'):
+                    result = result * number
+                elif (operation == 'max'):
+                    if (result < number):
+                        result = number
+                else:
+                    if (number < result):
+                        result = number
+
+        return str(result)
+    else:
+        return jsonify(
+            message='failure',
+            data='No file found',
+            status=500,
+        )
+
+    # except Exception as e:
+    #     return jsonify(
+    #         message='failure',
+    #         data='An error occoured',
+    #         error=str(e),
+    #         status=500,
+    #     )
 
 
 @app.route('/edgeDetection' , methods = ['GET', 'POST'])
@@ -697,10 +903,10 @@ def scholarlyBookAuthor ():
     for pub in author.publications:
         search_book = scholarly.search_pubs(pub.bib['title'])
         book=next(search_book)
-        print (book)
+        # print (book)
         url=''
         try:
-            url=book.blb['eprint']
+            url=book['blb']
         except:
             url=''
 
@@ -732,7 +938,7 @@ def scholarlyBookKeyword ():
         for i in range(5):
             try:
                 author = next(search_query)
-                string+=str(author)+","
+                string+=author.blb['eprint']
             except:
                 print('')
 
@@ -755,16 +961,18 @@ def scholarlyBookPubs ():
         for i in range(5):
             try:
                 author = next(search_query)
-                string+=str(author)+","
+                print (author['blb'])
+                string=author.blb['eprint']
+                print (string)
             except:
-                print('')
+                string=''
+            if(string!=''):
+                break
 
-
-        if(len(string)>0):
-            string =string[:-1]
 
         return (str(string))
     except Exception as e:
+        print (e)
         response="Error occured please check your input"
         return response
 
