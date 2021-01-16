@@ -48,8 +48,8 @@ CORS(app)
 CONFIDENCE = 0.5
 SCORE_THRESHOLD = 0.5
 IOU_THRESHOLD = 0.5
-
-
+os.environ["TESSDATA_PREFIX"] = "C:\\Users\\User\\AppData\\Local\\Tesseract-OCR\\tessdata"
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\User\AppData\Local\Tesseract-OCR\tesseract.exe'
 # the neural network configuration
 config_path = "cfg/yolov3.cfg"
 # the YOLO net weights file
@@ -154,32 +154,34 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static')
 @app.route('/grayscale' , methods = ['GET', 'POST'])
 def grascaleImage():
-    try:
+    # try:
         
-        url='https://techcrunch.com/wp-content/uploads/2015/10/screen-shot-2015-10-08-at-4-20-16-pm.png?w=730&crop=1'
-        url=request.form['data']
-        f = request.files['imgFile']
-        originalImage = io.imread(url)
-        page = requests.get(url)
-        response = requests.get(url)
-        content_type = response.headers['content-type']
-        extension = mimetypes.guess_extension(content_type)
-        if (extension == '.jpe'):
-            extension = '.jpg'
-        f_ext = os.path.splitext(url)[-1]
-        f_name = 'img{}'.format(f_ext)
-        timeStr=str(int(round(time.time() * 1000)))
-        f_name=timeStr+'gray'+extension
-        grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, grayImage)
+    url='https://techcrunch.com/wp-content/uploads/2015/10/screen-shot-2015-10-08-at-4-20-16-pm.png?w=730&crop=1'
+    # print (request)
+    url=request.form['data']
+    # f = request.files['imgFile']
+    print (url)
+    originalImage = io.imread(url)
+    # page = requests.get(url)
+    response = requests.get(url)
+    content_type = response.headers['content-type']
+    extension = mimetypes.guess_extension(content_type)
+    if (extension == '.jpe'):
+        extension = '.jpg'
+    f_ext = os.path.splitext(url)[-1]
+    # f_name = 'img{}'.format(f_ext)
+    timeStr=str(int(round(time.time() * 1000)))
+    f_name=timeStr+'gray'+extension
+    grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, grayImage)
 
-        return baseUrl+url_for('static',filename=f_name)
+    return baseUrl+url_for('static',filename=f_name)
 
-    except:
-        return jsonify(
-            message='success',
-            data='Put an image link with extension',
-        )
+    # except:
+    #     return jsonify(
+    #         message='success',
+    #         data='Put an image link with extension',
+    #     )
 
 def rgb_to_hsv(r, g, b):
     r, g, b = r/255.0, g/255.0, b/255.0
@@ -290,7 +292,6 @@ def colorMasking():
 @app.route('/ocrAny', methods=['GET', 'POST'])
 def ocrAny():
     try:
-
         language = request.form['language']
         uploaded_file = request.files['imgFile']
         timeStr = str(int(round(time.time() * 1000)))
@@ -380,12 +381,41 @@ def operationOnCSV ():
     #         status=500,
     #     )
 
+@app.route('/edgeDetectionFile', methods=['GET', 'POST'])
+def edgeDetectionFile():
+    try:
+        uploaded_file = request.files['imgFile']
+        timeStr = str(int(round(time.time() * 1000)))
+        if uploaded_file.filename != '':
+            filename = timeStr+secure_filename(filename = secure_filename(uploaded_file.filename))
+            uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+            img = cv2.imread('static/' + filename)
+            edges = cv2.Canny(img, 100, 200)
+            f_name = timeStr + 'edge' + uploaded_file.filename
 
+            # calculate the edges using Canny edge algorithm
+            # plot the edges
+
+
+            cv2.imwrite(UPLOAD_FOLDER + '/' + f_name, edges)
+            return app.send_static_file(f_name)
+        else:
+            return jsonify(
+                message='failure',
+                data='No file found',
+                status=500,
+            )
+
+    except Exception as e:
+        return jsonify(
+            message='failure',
+            data='An error occoured',
+            error=str(e),
+            status=500,
+        )
 @app.route('/edgeDetection' , methods = ['GET', 'POST'])
 def edgeDetection():
     try:
-        
-
         url='https://techcrunch.com/wp-content/uploads/2015/10/screen-shot-2015-10-08-at-4-20-16-pm.png?w=730&crop=1'
         url = request.form['image']
         originalImage = io.imread(url)
