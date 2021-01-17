@@ -48,8 +48,8 @@ CORS(app)
 CONFIDENCE = 0.5
 SCORE_THRESHOLD = 0.5
 IOU_THRESHOLD = 0.5
-os.environ["TESSDATA_PREFIX"] = "C:\\Users\\User\\AppData\\Local\\Tesseract-OCR\\tessdata"
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\User\AppData\Local\Tesseract-OCR\tesseract.exe'
+# os.environ["TESSDATA_PREFIX"] = "C:\\Users\\User\\AppData\\Local\\Tesseract-OCR\\tessdata"
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Users\User\AppData\Local\Tesseract-OCR\tesseract.exe'
 # the neural network configuration
 config_path = "cfg/yolov3.cfg"
 # the YOLO net weights file
