@@ -70,7 +70,7 @@ class_names = load_class_names(namesfile)
 
 
 # baseUrl='http://vmi425296.contaboserver.net:5000/'
-baseUrl='http://localhost:5000'
+baseUrl='http://quexl.com:5000'
 def remove_noise(tweet_tokens, stop_words = ()):
 
     cleaned_tokens = []
@@ -1063,8 +1063,8 @@ def graphPlot ():
     #         data='The input was invalid',
     #     )
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0')
 # if __name__ == '__main__':
 #     app.run(debug=True)
 
