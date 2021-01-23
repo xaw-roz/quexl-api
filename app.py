@@ -174,14 +174,54 @@ def grascaleImage():
     f_name=timeStr+'gray'+extension
     grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
     cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, grayImage)
-
-    return baseUrl+url_for('static',filename=f_name)
+    # cv2.imwrite(UPLOAD_FOLDER + '/' + filename, bgrResult)
+    return app.send_static_file(f_name)
+    # return baseUrl+url_for('static',filename=f_name)
 
     # except:
     #     return jsonify(
     #         message='success',
     #         data='Put an image link with extension',
     #     )
+@app.route('/grayscaleFile' , methods = ['GET', 'POST'])
+def grayscaleFile():
+    try:
+
+        # url='https://techcrunch.com/wp-content/uploads/2015/10/screen-shot-2015-10-08-at-4-20-16-pm.png?w=730&crop=1'
+        # print (request)
+        # url=request.form['data']
+        f = request.files['imgFile']
+        # print (url)
+        timeStr=str(int(round(time.time() * 1000)))
+
+        if f.filename != '':
+            filename = timeStr + secure_filename(filename=secure_filename(f.filename))
+            f.save(os.path.join(UPLOAD_FOLDER, filename))
+            originalImage = cv2.imread('static/' + filename)
+            # originalImage = io.imread(url)
+            # page = requests.get(url)
+            # response = requests.get(url)
+
+            # f_name = 'img{}'.format(f_ext)
+            f_name='gray'+filename
+            grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(UPLOAD_FOLDER+'/'+f_name, grayImage)
+            # cv2.imwrite(UPLOAD_FOLDER + '/' + filename, bgrResult)
+            return app.send_static_file(f_name)
+        else:
+            return jsonify(
+                message='failure',
+                status=500,
+                data='No file',
+            )
+
+    # return baseUrl+url_for('static',filename=f_name)
+
+    except:
+        return jsonify(
+            message='success',
+            data='Put an image link with extension',
+        )
 
 def rgb_to_hsv(r, g, b):
     r, g, b = r/255.0, g/255.0, b/255.0
@@ -578,6 +618,39 @@ def objectDetection():
         #     message='success',
         #     data=baseUrl+url_for('static', filename=f_name),
         # )
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='Put an image link with extension',
+        )
+@app.route('/objectDetectionFile' , methods = ['GET', 'POST'])
+def objectDetectionFile():
+    try:
+        uploaded_file = request.files['imgFile']
+        timeStr = str(int(round(time.time() * 1000)))
+        if uploaded_file.filename != '':
+            filename = timeStr + secure_filename(filename=secure_filename(uploaded_file.filename))
+            uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+            imgOrgi = cv2.imread('static/' + filename)
+
+
+            # cv2.imwrite(UPLOAD_FOLDER + '/' + fistName, originalImage)
+            # original_image = cv2.imread('static/'+fistName)
+            img = cv2.resize(imgOrgi, (m.width, m.height))
+            # detect the objects
+            boxes = detect_objects(m, img, iou_threshold, score_threshold)
+            outputFiles='outputName'+filename
+            # plot the image with the bounding boxes and corresponding object class labels
+            detecteds= plot_boxes(imgOrgi, boxes, class_names,UPLOAD_FOLDER + '/' +outputFiles, plot_labels=True)
+            return app.send_static_file(outputFiles)
+        else:
+            return jsonify(
+                message='failure',
+                status=500,
+                data='Image not found',
+            )
+
     except Exception as e:
         print(e)
         return jsonify(
