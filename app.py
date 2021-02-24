@@ -423,36 +423,37 @@ def operationOnCSV ():
 
 @app.route('/edgeDetectionFile', methods=['GET', 'POST'])
 def edgeDetectionFile():
-    try:
-        uploaded_file = request.files['imgFile']
-        timeStr = str(int(round(time.time() * 1000)))
-        if uploaded_file.filename != '':
-            filename = timeStr+secure_filename(filename = secure_filename(uploaded_file.filename))
-            uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
-            img = cv2.imread('static/' + filename)
-            edges = cv2.Canny(img, 100, 200)
-            f_name = timeStr + 'edge' + uploaded_file.filename
+    # try:
+    print(request)
+    uploaded_file = request.files['imgFile']
+    timeStr = str(int(round(time.time() * 1000)))
+    if uploaded_file.filename != '':
+        filename = timeStr+secure_filename(filename = secure_filename(uploaded_file.filename))
+        uploaded_file.save(os.path.join(UPLOAD_FOLDER, filename))
+        img = cv2.imread('static/' + filename)
+        edges = cv2.Canny(img, 100, 200)
+        f_name = timeStr + 'edge' + uploaded_file.filename
 
-            # calculate the edges using Canny edge algorithm
-            # plot the edges
+        # calculate the edges using Canny edge algorithm
+        # plot the edges
 
 
-            cv2.imwrite(UPLOAD_FOLDER + '/' + f_name, edges)
-            return app.send_static_file(f_name)
-        else:
-            return jsonify(
-                message='failure',
-                data='No file found',
-                status=500,
-            )
-
-    except Exception as e:
+        cv2.imwrite(UPLOAD_FOLDER + '/' + f_name, edges)
+        return app.send_static_file(f_name)
+    else:
         return jsonify(
             message='failure',
-            data='An error occoured',
-            error=str(e),
+            data='No file found',
             status=500,
         )
+
+    # except Exception as e:
+    #     return jsonify(
+    #         message='failure',
+    #         data='An error occoured',
+    #         error=str(e),
+    #         status=500,
+    #     )
 @app.route('/edgeDetection' , methods = ['GET', 'POST'])
 def edgeDetection():
     try:
@@ -765,10 +766,7 @@ def sentimentAnalysis():
     try:
         custom_tweet = "I am having fun. , I was sad, I am going"
         inputType = request.args.get('inptype')
-        outputType = request.args.get('outtype')
-        key = request.args.get('key')
-
-        if(key=='12345'):
+        if(True):
             eachtweet = []
             custom_tweet = "I am having fun. , I was sad, I am going"
 
@@ -791,11 +789,6 @@ def sentimentAnalysis():
             return jsonify(
                 message='success',
                 data=dictitnary,
-            )
-        else:
-            return jsonify(
-                message='success',
-                data='invalid_key',
             )
     except Exception as e:
         print(e)
@@ -836,13 +829,103 @@ def tableDataManipulation ():
         except:
             print("Error occured")
 
-        # df1 = df1[['name', 'age', 'state']]//reorder
-        # df1.drop(columns=['age', 'name'])
-        # df1=df1.drop(columns=['Suppressed','Series_title_4','STATUS','UNITS','Magnitude','Subject','Group','Series_title_1'],axis=1,inplace=True)
         print (table1)
         result=table1.to_csv(sep='\t')
         # print (df2)
         return  result
+        # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='The input was invalid',
+        )
+
+@app.route('/deleteRow' , methods = ['GET', 'POST'])
+def deleteRow ():
+    try:
+        file1 = request.files['file']
+        # data2=request.form['data2']
+        action1=request.form['action1']
+        action2=request.form['action2']
+
+        pd.set_option("display.max_rows", None, "display.max_columns", None)
+        table1 = pd.read_csv(file1, sep="\t")
+        timeStr = str(int(round(time.time() * 1000)))
+        try:
+            if(len(action1)>0):
+                columns=action1.split(',')
+                print(columns)
+                print('action1')
+                table1=table1.drop(columns=columns)
+        except Exception as e:
+            print(e)
+        try:
+            if (len(action2)>0):
+                row=map(int,action2.split(','))
+                print(row)
+                print('action2')
+                table1=table1.drop(row)
+        except Exception as e:
+            print(e)
+        print(table1)
+        outputFile=timeStr+'filename.tsv'
+        table1.to_csv(UPLOAD_FOLDER+'/'+outputFile, sep='\t', index=False)
+        # result=table1.to_csv(sep='\t')
+        # print (df2)
+        return app.send_static_file(outputFile)
+        # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='The input was invalid',
+        )
+
+
+@app.route('/replaceData' , methods = ['GET', 'POST'])
+def replaceData():
+    try:
+        file1 = request.files['file']
+        # data2=request.form['data2']
+        columnN = request.form['column']
+        action1=request.form['word']
+        action2=request.form['replacement']
+
+        pd.set_option("display.max_rows", None, "display.max_columns", None)
+        table1 = pd.read_csv(file1, sep="\t")
+        timeStr = str(int(round(time.time() * 1000)))
+        try:
+            # df.replace({'A': {0: 100, 4: 400}})
+            if(len(action1)>0 and len(action2)>0):
+                if(len(columnN)>0):
+                    try:
+                        table1 = table1.replace({columnN: {int(action1): int(action2)}})
+                    except Exception as e:
+                        print(e)
+                    try:
+                        table1 = table1.replace({columnN: {float(action1): float(action2)}})
+                    except Exception as e:
+                        print(e)
+                    table1=table1.replace({columnN: {action1:action2}})
+                else:
+                    try:
+                        table1=table1.replace(int(action1),int(action2))
+                    except Exception as e:
+                        print(e)
+                    try:
+                        table1=table1.replace(float(action1),float(action2))
+                    except Exception as e:
+                        print(e)
+                    table1=table1.replace(action1,action2)
+        except Exception as e:
+            print(e)
+        print(table1)
+        outputFile=timeStr+'filename.tsv'
+        table1.to_csv(UPLOAD_FOLDER+'/'+outputFile, sep='\t', index=False)
+        # result=table1.to_csv(sep='\t')
+        # print (df2)
+        return app.send_static_file(outputFile)
         # return pd.concat([df1,df2], axis=1).to_csv(sep='\t')
     except Exception as e:
         print(e)
@@ -883,6 +966,8 @@ def fileConversion():
             fileName=timeStr+ file1.filename
             path = UPLOAD_FOLDER+"/"+fileName
             file1.save(path)
+            timeStr = str(int(round(time.time() * 1000)))
+
             outputFile = timeStr + "out."+target
             outPath = UPLOAD_FOLDER+"/"+outputFile
 
@@ -1137,7 +1222,7 @@ def graphPlot ():
     #     )
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',debug=True)
 # if __name__ == '__main__':
 #     app.run(debug=True)
 
