@@ -5,13 +5,23 @@ import pytesseract
 from pip._vendor import requests
 from skimage import io
 from PIL import Image
+import pycurl
+import subprocess
+from urllib.parse import urlencode
+
+from io import BytesIO
+import certifi
+
 import numpy as np
 import mimetypes
+import requests
+
 import colorsys
 from urllib.request import urlopen
 from os.path import basename
 import sys
 import os
+
 from subprocess import call
 from io import StringIO
 import scipy.misc
@@ -841,9 +851,43 @@ def tableDataManipulation ():
             data='The input was invalid',
         )
 
-@app.route('/deleteRow' , methods = ['GET', 'POST'])
+@app.route('/healthCareApi' , methods = ['GET', 'POST'])
+def healthCareApi ():
+    try:
+        description=request.form['description']
+
+        crl = pycurl.Curl()
+        buffer = BytesIO()
+        crl.setopt(pycurl.CAINFO, certifi.where())
+        token = subprocess.getoutput("gcloud auth application-default print-access-token")
+
+        crl.setopt(pycurl.HTTPHEADER, ['Authorization: Bearer ' + token])
+        crl.setopt(crl.URL,
+                   'https://healthcare.googleapis.com/v1beta1/projects/quexleval/locations/us-central1/services/nlp:analyzeEntities'.encode(
+                       'utf-8').strip())
+        data = {'nlpService': 'projects/quexleval/locations/us-central1/services/nlp',
+                'documentContent': description}
+        pf = urlencode(data)
+        crl.setopt(crl.POSTFIELDS, pf)
+        crl.setopt(crl.WRITEDATA, buffer)
+
+        crl.perform()
+        resp=buffer.getvalue()
+        crl.close()
+
+        return resp
+        # dictFromServer = res.json()
+    except Exception as e:
+        print(e)
+        return jsonify(
+            message='success',
+            data='The input was invalid',
+        )
+
+@app.route('/deleteRow', methods = ['GET', 'POST'])
 def deleteRow ():
     try:
+        print(request.form)
         file1 = request.files['file']
         # data2=request.form['data2']
         action1=request.form['action1']
