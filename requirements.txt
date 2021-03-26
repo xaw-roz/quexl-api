@@ -47,7 +47,7 @@ python-dotenv==0.14.0
 pytils==0.3
 pytz==2020.1
 PyWavelets==1.1.1
-PyYAML==5.3.1
+PyYAML==5.4
 regex==2020.6.8
 requests==2.24.0
 scholarly==0.4.2
